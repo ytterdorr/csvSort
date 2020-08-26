@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="papaparse.js"></script>
+    <script src="sorter.js" defer></script>
+</head>
+<body>
+    <h1>Filförenklare</h1>
+
+    <form action="">
+        <label for="file-input">Välj fil</label>
+        <input type="file" name="file-input" id="file-input" accept=".csv" multiple>
+        <button type="button" id="simplify-button">Förenkla</button>
+        <div id="msg-box"></div>
+    </form>
+</body>
+</html>
