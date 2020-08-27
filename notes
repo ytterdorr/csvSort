@@ -1,7 +1,14 @@
 5 september deadline
 
-- rensa kolumner
-- summera dagar
+> Hantera flera dokument
+> skriv ut endast tabell
+> skapa TSV
+
+=0= rensa kolumner
+=0= summera dagar
 
 TODO
 Fråga Marianne om hur man räknar övernattning
+=0= Räknar man 1 för 2 dagar? => räknar per startdag 
+=0= Om den korsar månad, hur gör man då? => markera månadskors, räkna bara dagar i månad
+=0= Sortera på efternamn 

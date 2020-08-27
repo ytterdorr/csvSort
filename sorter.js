@@ -1,9 +1,15 @@
 function _get (elString) {
     return document.querySelector(elString);
 } 
+
+function _create(elementString, innerHTML="") {
+   return Object.assign(document.createElement(elementString), { innerHTML })
+}
+
+const monthLookup = ["januari", "februari", "mars", "april", "maj", "juni", "juli", "augusti", "september", "oktober", "november", "december"]
+
 let simpBtn = _get("#simplify-button");
 let msgBox = _get("#msg-box");
-let mSel = _get("month-select")
 let yearMonth;
 
 const [ID, B_TYPE, DATES, NAME, S_NAME, UF_NAME, DETAIL] = [0, 1, 3, 7, 8, 9, 14]
@@ -42,17 +48,18 @@ function lastOfMonthLookup(year, month) {
     return monthLookup[month]
 }
 
-function calculateDays(dateString) {
+function calculateDays(rowObj) {
+    let dateString = rowObj.dates
     // Check for multiple dates
     let dayCount = 0;
     let dates = dateString.split(",");
-    console.log(dates)
+    //console.log(dates)
     //yearMonth = _get("#month-select").value
-    const firstOfMonth = `${yearMonth}-01`
+    const firstOfMonth = String(`${yearMonth}-01`)
     const lastDay = lastOfMonthLookup(yearMonth.slice(0, 4), yearMonth.slice(5, 7))
-    const lastOfMonth = `${yearMonth}-${lastDay}`
-    console.log("lastOfMonth:", lastOfMonth)
-    console.log(lastOfMonth)
+    const lastOfMonth = String(`${yearMonth}-${lastDay}`)
+    //console.log(`firstOfMonth: ${firstOfMonth}`)
+    //console.log("lastOfMonth:", lastOfMonth)
 
     for (let d of dates) {
         // If just one day booked
@@ -62,9 +69,30 @@ function calculateDays(dateString) {
         // if more days are booked
         else if (d.length > 15) {
            let [start, stop] = d.split(" - ")
-           console.log(`start: ${start}, stop: ${stop}`)
-           start = (start > firstOfMonth) ? start : firstOfMonth;
-           stop = (stop < lastOfMonth) ? stop : lastOfMonth;
+           //console.log(`start: ${start}, stop: ${stop}`)
+           //console.log("start < firstOfMonth:", new Date(start) < new Date (firstOfMonth))
+           // Check if month crossing
+           
+           // If both dates are out of bounds
+           
+           if (start > lastOfMonth || stop < firstOfMonth) {
+               console.log(`date out of bounds, start: ${start}, stop: ${stop}`);
+               continue
+           }
+
+           if (new Date(start) < new Date (firstOfMonth)) {
+               start = firstOfMonth;
+               rowObj.month_crossover = true;
+           }
+
+           if (stop > lastOfMonth) {
+               stop = lastOfMonth;
+               rowObj.month_crossover = true
+           }
+
+
+           
+           // Calculate diff
            let startNr = Number(start.slice(8, 10));
            let stopNr = Number(stop.slice(8, 10));
            let dayDiff = stopNr - startNr
@@ -76,35 +104,103 @@ function calculateDays(dateString) {
             return "error";
         }
     }
-    
-    return dayCount;
+    //console.log("dayCount:", dayCount)
+    rowObj.days_in_month = dayCount
+    return rowObj;
 
 }
 
-function compareUniqueFieldName( a, b ) {
-    if ( a.unique_field_name  < b.unique_field_name  ){
+function compareSecondName( a, b ) {
+    let aComp = a.second_name.toLowerCase()
+    let bComp = b.second_name.toLowerCase()
+    if ( aComp  < bComp ){
       return -1;
     }
-    if ( a.unique_field_name  > b.unique_field_name  ){
+    if ( aComp > bComp  ){
       return 1;
     }
     return 0;
   }
+
+
+function createTable(rowObjects) {
+    console.log("robObjects for table:", rowObjects)
+    table = _get("#result-table");
+
+    let month = new Date(_get("#month-select").value).getMonth()
+    let th = _create("tr", _create("th", "Bokningstyp").outerHTML +
+                        _create("th", "Datum").outerHTML +
+                        _create("th", `Dagar i ${monthLookup[month]}`).outerHTML + 
+                        _create("th", "Fler månader").outerHTML +
+                        _create("th", "Förnamn").outerHTML + 
+                        _create("th", "Efternamn").outerHTML +
+                        _create("th", "u_field").outerHTML +
+                        _create("th", "Detaljer").outerHTML +
+                        _create("th", "Faktura").outerHTML
+                    )
+    let thead = _create("thead").appendChild(th)
+    table.appendChild(thead)
+    console.log(thead)
+
+    // Table body
+    let tbody = _create("tbody")
+
+    for (let obj of rowObjects) {
+        let row = _create("tr")
+        row.appendChild(_create("td", obj.booking_type))
+        // Date handle
+        let datesTd = _create("td")
+        datesTd.classList.add("dates")
+        let dates = obj.dates.replace(",", ",<br />")
+        datesTd.innerHTML = dates
+        
+        row.appendChild(datesTd)
+        row.appendChild(_create("td", obj.days_in_month))
+        row.appendChild(_create("td", obj.month_crossover ? "x" : ""))
+        row.appendChild(_create("td", obj.name))
+        row.appendChild(_create("td", obj.second_name))
+        row.appendChild(_create("td", obj.unique_field_name))
+        
+        let detail = _create("td", obj.detail)
+        detail.classList.add("detail")
+        row.appendChild(detail)
+        row.appendChild(_create("td", ""))
+        tbody.appendChild(row)
+        
+    }
+
+    console.log("tbody", tbody)
+
+    table.appendChild(tbody)
+}
+
+function createTSVFile(rowObjects) {
+    console.log(rowObjects)
+}
 
 function handleFileInput() {
     //e.preventDefault()
 
     const files = _get("#file-input").files;
     yearMonth = _get("#month-select").value;
-    console.log("Month value:", yearMonth);
+    //console.log("Month value:", yearMonth);
+
+    // Escape if no month selected
+    if (!yearMonth) {
+        msgBox.innerHTML = "Ingen månad vald"
+        return
+    }
+
     // Escape if no file is seleted
     if (files.length <= 0) {
         msgBox.innerHTML = "Ingen fil vald"
         return
     } 
+
+    
     // Else work on file
     let f = files[0]
-    console.log("First file", f)
+    //console.log("First file", f)
 
     rowObjects = []
     let reader = new FileReader();
@@ -117,8 +213,7 @@ function handleFileInput() {
         let headers = parsed.data[0]
         let firstRow = parsed.data[1]
         let allRows = parsed.data.slice(1, parsed.data.length)
-        console.log(headers[DETAIL])
-        console.log("All rows:", allRows)
+        //console.log("All rows:", allRows)
 
         // [ID, B_TYPE, DATES, NAME, S_NAME, DETAIL]
         for (let row of allRows) {
@@ -130,12 +225,21 @@ function handleFileInput() {
             rowObj.second_name = row[S_NAME];
             rowObj.detail = row[DETAIL];
             rowObj.unique_field_name = row[UF_NAME];
-            rowObj.days_in_month = calculateDays(rowObj.dates)
+            rowObj = calculateDays(rowObj)
             rowObjects.push(rowObj)
         }
-        rowObjects.sort(compareUniqueFieldName)
-        console.log("Row Objects:", rowObjects)
+        rowObjects.sort(compareSecondName)
+        
+        let rowObjsWithmonth_crossover = rowObjects.filter(obj => obj.month_crossover);
+        console.log("rowObjsWithmonth_crossover:", rowObjsWithmonth_crossover)
+        //console.log("Row Objects:", rowObjects)
+
+        // Create table
+        createTable(rowObjects)
+        
     }
+
+    
 
 }
 

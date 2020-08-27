@@ -1,0 +1,35 @@
+.container {
+    display: flex; 
+    flex-direction: column;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    max-width: 200px;
+}
+
+#result-table {
+    max-width: 900px;
+}
+
+table {
+    border-spacing: 0;
+    text-align: center;
+}
+th {
+    padding: 5px;
+}
+
+td {
+    margin: 0;
+    padding: 0;
+    border: 1px solid black;
+}
+
+td.detail {
+    max-width: 150px;
+}
+td.dates {
+    width: 200px;
+}
