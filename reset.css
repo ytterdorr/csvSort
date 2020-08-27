@@ -1,8 +1,11 @@
-/*
-This reset is gratefully copied from:
+/* Gratefully stolen from Andy Bell 
 https://dev.to/hankchizljaw/a-modern-css-reset-6p3
 */
 
+/* Box sizing rules */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
