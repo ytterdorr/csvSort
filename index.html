@@ -12,6 +12,24 @@
     <h1>Filförenklare</h1>
 
     <form action="">
+        <label for="month-select">Månad</label>
+        <input type="month" name="month-select" id="month-select">
+        <!-- 
+        <select id="month-select" name="month-select">
+            <option value="januari">Januari</option>
+            <option value="februari">Februari</option>
+            <option value="mars">Mars</option>
+            <option value="april">April</option>
+            <option value="maj">Maj</option>
+            <option value="juni">Juni</option>
+            <option value="juli">Juli</option>
+            <option value="augusti">Augusti</option>
+            <option value="september">September</option>
+            <option value="oktober">Oktober</option>
+            <option value="november">November</option>
+            <option value="december">December</option>
+        </select>
+        -->
         <label for="file-input">Välj fil</label>
         <input type="file" name="file-input" id="file-input" accept=".csv" multiple>
         <button type="button" id="simplify-button">Förenkla</button>
