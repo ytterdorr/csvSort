@@ -6,11 +6,35 @@ function _create(elementString, innerHTML="") {
    return Object.assign(document.createElement(elementString), { innerHTML })
 }
 
-const monthLookup = ["januari", "februari", "mars", "april", "maj", "juni", "juli", "augusti", "september", "oktober", "november", "december"]
+//+ Jonas Raoni Soares Silva
+//@ http://jsfromhell.com/geral/utf-8 [rev. #1]
+
+var UTF8 = {
+    encode: function(s){
+        for(var c, i = -1, l = (s = s.split("")).length, o = String.fromCharCode; ++i < l;
+            s[i] = (c = s[i].charCodeAt(0)) >= 127 ? o(0xc0 | (c >>> 6)) + o(0x80 | (c & 0x3f)) : s[i]
+        );
+        return s.join("");
+    },
+    decode: function(s){
+        for(var a, b, i = -1, l = (s = s.split("")).length, o = String.fromCharCode, c = "charCodeAt"; ++i < l;
+            ((a = s[i][c](0)) & 0x80) &&
+            (s[i] = (a & 0xfc) == 0xc0 && ((b = s[i + 1][c](0)) & 0xc0) == 0x80 ?
+            o(((a & 0x03) << 6) + (b & 0x3f)) : o(128), s[++i] = "")
+        );
+        return s.join("");
+    }
+};
+
+const monthLookup = ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep", "okt", "nov", "dec"]
 
 let simpBtn = _get("#simplify-button");
 let msgBox = _get("#msg-box");
 let yearMonth;
+let csvContent;
+
+_get("#download-pdf").addEventListener("click", printPDF)
+_get("#download-csv").addEventListener("click", downloadCSV)
 
 const [ID, B_TYPE, DATES, NAME, S_NAME, UF_NAME, DETAIL] = [0, 1, 3, 7, 8, 9, 14]
 
@@ -48,6 +72,54 @@ function lastOfMonthLookup(year, month) {
     return monthLookup[month]
 }
 
+function printPDF() {
+    window.print();
+}
+
+function createCSVContent(rowObjects) {
+    console.log(rowObjects)
+    let month = monthLookup[new Date(_get("#month-select").value).getMonth()]
+    csvContent = `Bokningstyp\tDatum\tDagar i ${month}\tObs\tFörnamn\tEfternamn\tu_field\tDetaljer\tFaktura`
+
+    for (let obj of rowObjects) {
+        csvContent += `\n${obj.booking_type}\t${obj.dates}\t${obj.days_in_month}\t${obj.month_crossover ? "x" : " "}\t${obj.name}\t${obj.second_name}\t${obj.unique_field_name}\t${obj.detail}\t  `
+    }
+
+    console.log("csvContent:", csvContent)
+
+}
+
+function downloadCSV() {
+    console.log("Download csv")
+      let yearMonth = _get("#month-select").value
+    
+    // This download funciton is stolen from: Arne H. Bitubekk
+    // https://stackoverflow.com/questions/14964035/how-to-export-javascript-array-info-to-csv-on-client-side
+    // who got it from dandavis: dandavis https://stackoverflow.com/a/16377813/1350598
+    var download = function(content, fileName, mimeType) {
+    var a = document.createElement('a');
+    mimeType = mimeType || 'application/octet-stream';
+  
+    if (navigator.msSaveBlob) { // IE10
+      navigator.msSaveBlob(new Blob([content], {
+        type: mimeType
+      }), fileName);
+    } else if (URL && 'download' in a) { //html5 A[download]
+      a.href = URL.createObjectURL(new Blob([content], {
+        type: mimeType
+      }));
+      a.setAttribute('download', fileName);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else {
+      location.href = 'data:application/octet-stream,' + encodeURIComponent(content); // only this mime type is supported
+    }
+  }
+  
+  download(csvContent, `bokningar_${yearMonth}.tsv`, 'text/csv;encoding:utf-8');
+    }
+
 function calculateDays(rowObj) {
     let dateString = rowObj.dates
     // Check for multiple dates
@@ -55,6 +127,7 @@ function calculateDays(rowObj) {
     let dates = dateString.split(",");
     //console.log(dates)
     //yearMonth = _get("#month-select").value
+    yearMonth  = _get("#month-select").value;
     const firstOfMonth = String(`${yearMonth}-01`)
     const lastDay = lastOfMonthLookup(yearMonth.slice(0, 4), yearMonth.slice(5, 7))
     const lastOfMonth = String(`${yearMonth}-${lastDay}`)
@@ -122,16 +195,23 @@ function compareSecondName( a, b ) {
     return 0;
   }
 
+function handleEndOfFiles(rowObjects) {
+    createTable(rowObjects)
+    createCSVContent(rowObjects)
+    _get(".button-container").classList.remove("hidden")
+}
 
 function createTable(rowObjects) {
-    console.log("robObjects for table:", rowObjects)
+    console.log("rowObjects for table:", rowObjects)
     table = _get("#result-table");
+    // Clear table
+    table.innerHTML = "";
 
     let month = new Date(_get("#month-select").value).getMonth()
     let th = _create("tr", _create("th", "Bokningstyp").outerHTML +
                         _create("th", "Datum").outerHTML +
                         _create("th", `Dagar i ${monthLookup[month]}`).outerHTML + 
-                        _create("th", "Fler månader").outerHTML +
+                        _create("th", "Obs").outerHTML +
                         _create("th", "Förnamn").outerHTML + 
                         _create("th", "Efternamn").outerHTML +
                         _create("th", "u_field").outerHTML +
@@ -147,7 +227,12 @@ function createTable(rowObjects) {
 
     for (let obj of rowObjects) {
         let row = _create("tr")
-        row.appendChild(_create("td", obj.booking_type))
+        
+        let bookingType = _create("td", obj.booking_type)
+        bookingType.classList.add("booking-type")
+        row.appendChild(bookingType)
+        
+        
         // Date handle
         let datesTd = _create("td")
         datesTd.classList.add("dates")
@@ -174,11 +259,9 @@ function createTable(rowObjects) {
     table.appendChild(tbody)
 }
 
-function createTSVFile(rowObjects) {
-    console.log(rowObjects)
-}
 
-function handleFileInput() {
+
+async function handleFileInput() {
     //e.preventDefault()
 
     const files = _get("#file-input").files;
@@ -199,12 +282,16 @@ function handleFileInput() {
 
     
     // Else work on file
-    let f = files[0]
+    
     //console.log("First file", f)
 
+    let fileCounter = 0
+    //let f = files[0]
+
     rowObjects = []
+
+
     let reader = new FileReader();
-    reader.readAsText(f)
     reader.onload = function(event) {
         let tsv = event.target.result;
 
@@ -229,15 +316,28 @@ function handleFileInput() {
             rowObjects.push(rowObj)
         }
         rowObjects.sort(compareSecondName)
-        
-        let rowObjsWithmonth_crossover = rowObjects.filter(obj => obj.month_crossover);
-        console.log("rowObjsWithmonth_crossover:", rowObjsWithmonth_crossover)
-        //console.log("Row Objects:", rowObjects)
+        fileCounter += 1
 
-        // Create table
-        createTable(rowObjects)
+        // Read next file if there are more
+        if (fileCounter < files.length) {
+            reader.readAsText(files[fileCounter])
+        }
+
+        // Create table when finished
+        else if (fileCounter == files.length) {
+            handleEndOfFiles(rowObjects)
+        } 
+        
+        // let rowObjsWithmonth_crossover = rowObjects.filter(obj => obj.month_crossover);
+        // console.log("rowObjsWithmonth_crossover:", rowObjsWithmonth_crossover)
+        //console.log("Row Objects:", rowObjects)
         
     }
+    // Start reading files
+    reader.readAsText(files[0])
+
+        
+    
 
     
 

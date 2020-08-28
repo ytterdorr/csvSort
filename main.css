@@ -10,13 +10,15 @@ form {
 }
 
 #result-table {
-    max-width: 900px;
+    max-width: 100vw;
 }
 
 table {
     border-spacing: 0;
-    text-align: center;
+    text-align
+    : center;
 }
+
 th {
     padding: 5px;
 }
@@ -27,9 +29,29 @@ td {
     border: 1px solid black;
 }
 
+td.booking-type {
+    width: 30vw;
+    text-align: left;
+}
+
 td.detail {
-    max-width: 150px;
+    width: 20vw;
+    text-align: left;
 }
 td.dates {
-    width: 200px;
+    width: 20vw;
+}
+
+.hidden {
+    display: none;
+}
+
+@media print {
+    .no-print {
+        display: none;
+    }
+
+    table {
+        width: 100vw;
+    }
 }

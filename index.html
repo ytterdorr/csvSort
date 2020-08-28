@@ -11,7 +11,7 @@
     <script src="sorter.js" defer></script>
 </head>
 <body>
-    <div class="container">
+    <div class="container no-print">
     <h1>Filförenklare</h1>
 
     <form action="">
@@ -22,7 +22,12 @@
         <button type="button" id="simplify-button">Förenkla</button>
         <div id="msg-box"></div>
     </form>
-    <table id="result-table"></table>
+    <div class="button-container hidden">
+        <h2>Ladda ned fil</h2>
+        <button id="download-pdf">Som PDF</button>
+        <button id="download-csv">Som TSV</button>
+    </div>
 </div>
+<table id="result-table"></table>
 </body>
 </html>
